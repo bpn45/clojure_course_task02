@@ -1,10 +1,22 @@
 (ns clojure-course-task02.core
+  (:require [clojure.java.io :as io])
   (:gen-class))
 
 
+(defn isdirectory? [str]
+  (.isDirectory (io/as-file str)))
+
+(defn get-file-vec [path]
+ (when (isdirectory? path) (vec (.list (io/as-file path)))))
+
 (defn find-files [file-name path]
-  "TODO: Implement searching for a file using his name as a regexp."
-  nil)
+  (let [filevec (get-file-vec path) matcher (re-pattern file-name)
+        fullpath (if (= (get path (dec (.length path))) \/) path (str path "/"))
+        dirlist (filter isdirectory? (map #(str fullpath  %)  filevec))]
+            (loop [filelist (filter #(re-matches matcher %) (remove #(isdirectory? (str fullpath %)) filevec)) dirlist dirlist]
+              (if (empty? dirlist)
+                filelist
+                (recur (concat filelist (deref (future (find-files file-name (first dirlist))))) (next dirlist))))))
 
 (defn usage []
   (println "Usage: $ run.sh file_name path"))
@@ -14,5 +26,6 @@
           (nil? path))
     (usage)
     (do
+      
       (println "Searching for " file-name " in " path "...")
       (dorun (map println (find-files file-name path))))))
