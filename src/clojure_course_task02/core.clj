@@ -13,8 +13,8 @@
 (defn find-files [file-name path]
   (let [filevec (get-file-vec path) matcher (re-pattern file-name)
         fullpath (if (= (get path (dec (.length path))) \/) path (str path "/"))
-        dirlist (filter isdirectory? (map #(str fullpath  %)  filevec))]
-            (loop [filelist (filter #(re-matches matcher %) (remove #(isdirectory? (str fullpath %)) filevec)) dirlist dirlist]
+        dirlist (into '() (r/filter isdirectory? (r/map #(str fullpath  %)  filevec)))]
+            (loop [filelist (into '() (r/filter #(re-matches matcher %) (r/remove #(isdirectory? (str fullpath %)) filevec))) dirlist dirlist]
               (if (empty? dirlist)
                 filelist
                 (recur (concat filelist (deref (future (find-files file-name (first dirlist))))) (next dirlist))))))
