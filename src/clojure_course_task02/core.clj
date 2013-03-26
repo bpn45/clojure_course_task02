@@ -1,5 +1,6 @@
 (ns clojure-course-task02.core
-  (:require [clojure.java.io :as io])
+  (:require [clojure.java.io :as io]
+             [clojure.core.reducers :as r])
   (:gen-class))
 
 
