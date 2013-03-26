@@ -28,4 +28,5 @@
     (do
       
       (println "Searching for " file-name " in " path "...")
-      (dorun (map println (find-files file-name path))))))
+      (dorun (map println (find-files file-name path)))
+       (shutdown-agents))))
