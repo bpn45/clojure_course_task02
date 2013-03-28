@@ -1,23 +1,28 @@
 (ns clojure-course-task02.core
   (:require [clojure.java.io :as io]
-             [clojure.core.reducers :as r])
+            [clojure.core.reducers :as r])
   (:gen-class))
 
 
-(defn isdirectory? [str]
+(defn directory? [str]
   (.isDirectory (io/as-file str)))
 
 (defn get-file-vec [path]
- (when (isdirectory? path) (vec (.list (io/as-file path)))))
+ (when (directory? path) (vec (.list (io/as-file path)))))
 
 (defn find-files [file-name path]
-  (let [filevec (get-file-vec path) matcher (re-pattern file-name)
-        fullpath (if (= (get path (dec (.length path))) \/) path (str path "/"))
-        dirlist (into '() (r/filter isdirectory? (r/map #(str fullpath  %)  filevec)))]
-            (loop [filelist (into '() (r/filter #(re-matches matcher %) (r/remove #(isdirectory? (str fullpath %)) filevec))) dirlist dirlist]
-              (if (empty? dirlist)
-                filelist
-                (recur (concat filelist (deref (future (find-files file-name (first dirlist))))) (next dirlist))))))
+  (let [filevec (get-file-vec path)
+        matcher (re-pattern file-name)
+        fullpath (if (= (last path) \/) path (str path "/"))
+        dirlist (->> filevec
+                     (r/map #(str fullpath  %))
+                     (r/filter directory?)
+                     (into '()))
+        filelist (->> filevec 
+                     (r/remove #(directory? (str fullpath %)))
+                     (r/filter #(re-matches matcher %))
+                      (into '()))]
+     (flatten (concat  filelist (pmap #(find-files file-name %) dirlist)))))
 
 (defn usage []
   (println "Usage: $ run.sh file_name path"))
